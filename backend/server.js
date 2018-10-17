@@ -3,6 +3,8 @@ const WebSocket = require('ws');
 const bodyParser = require('body-parser');
 const http = require('http');
 
+const routers = require('./routers/routers');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -15,7 +17,7 @@ wss.on('connection', ws => {
     ws.on('message', message => {
 
         //log the received message and send it back to the client
-        console.log(message);
+        // console.log(JSON.parse(message).x)
         ws.send(`Hello, you sent -> ${message}`);
     });
 
@@ -23,10 +25,7 @@ wss.on('connection', ws => {
     ws.send('Hi there, I am a WebSocket server');
 });
 
-app.get('/test', (req, res, next) => {
-	console.log(req.body)
-	res.send('asd');
-});
+app.use(routers);
 
 //start our server
 server.listen(process.env.PORT || 8999, () => {
