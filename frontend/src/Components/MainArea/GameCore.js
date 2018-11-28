@@ -54,7 +54,7 @@ class GameCore {
 		this.timer_value++;
 		setTimeout(() => {
 			this.startTimer();
-		}, 1000);
+		}, 250);
 	}
 
 	async setMainImage() {
@@ -427,11 +427,24 @@ class GameCore {
 	}
 
 	hit() {
+		const emW = this.images.enemy1.width,
+			emH = this.images.enemy1.height,
+			blW = this.images.turret_bullet.width,
+			blH = this.images.turret_bullet.height;
+
 		for(let i = 0; i < this.enemys.length; i++) {
 			for(let j = 0; j < this.bullets.length; j++) {
 				let enemy = this.enemys[i],
 					bullet = this.bullets[j];
-				if(enemy.x <= (bullet.x + this.images.turret_bullet.width) && (enemy.y + this.images.enemy1.height) >= bullet.y) {
+				if( (
+					enemy.x <= (bullet.x + blW) && 
+					(enemy.x + emW) >= bullet.x
+					) && 
+					(
+					(enemy.y + emH) >= bullet.y &&
+					enemy.y <= (bullet.y + blH)
+					)
+				) {
 					enemy.delete = true;
 					bullet.delete = true;
 				}
