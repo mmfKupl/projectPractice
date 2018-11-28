@@ -10,7 +10,10 @@ class GameCore {
 		this.fireFlag = false;
 		this.bullets = [];
 		this.enemys = [];
-		this.bullet_speed = 0.1;
+		this.bullet_speed = 0.5;
+		this.enemys_speed = 1;
+		this.timer_value = 0;
+		this.temp_timer_value = 0;
 	}
 
 	async init(m, canvas, width, height, id) {
@@ -43,8 +46,15 @@ class GameCore {
 		// }
 		await this.setMainImage();
 		this.ctx = this.canvas.getContext('2d');
-		this.initEnemy();
+		this.startTimer();
 		this.renderScene();
+	}
+
+	startTimer() {
+		this.timer_value++;
+		setTimeout(() => {
+			this.startTimer();
+		}, 1000);
 	}
 
 	async setMainImage() {
@@ -80,6 +90,7 @@ class GameCore {
 	}
 
 	renderScene() {
+		this.initEnemy();
 		this.currentAngle = this.getAngle({x: 100, y: 659}, {x: this.x,y: this.y});
 		if(this.ctx.drawImage) {
 			this.drawImage(this.images.background);
@@ -96,7 +107,6 @@ class GameCore {
 
 			this.renderBags();
 			this.renderBullets();
-			//this.initEnemy();
 			this.renderEnemys();
 
 		}
@@ -297,6 +307,7 @@ class GameCore {
 	}
 
 	fire() {
+		
 		let default_bullet = {
 			x: 100,
 			y: 665,
@@ -309,6 +320,11 @@ class GameCore {
 		// 	this.animate(this.renderBullet.bind(this), 3000, this.currentAngle + 50);
 		// }
 		// requestAnimationFrame(this.fire.bind(this));
+		if(this.fireFlag) {
+			setTimeout(() => {
+				this.fire();
+			}, 300);
+		}
 	}
 
 	renderBullets() {
@@ -365,10 +381,10 @@ class GameCore {
 	}
 
 	initEnemy() {
-		// if((new Date()).getSeconds() % 3) {
+		if(this.temp_timer_value !== this.timer_value) {
 			const enemy_w = this.images.enemy1.width,
 				enemy_h = this.images.enemy1.height;
- 			let default_enemy = {
+			let default_enemy = {
 				x: this.width + enemy_w,
 				//y: this.height * 0.5,
 				y: Math.random() * (500 - 100) + 100,
@@ -376,9 +392,10 @@ class GameCore {
 				//img: random img
 				//hp
 			}
+			this.temp_timer_value = this.timer_value;
 			console.log(default_enemy);
 			this.enemys.push(default_enemy);
-		// }
+		}
 	}
 
 	renderEnemys() {
@@ -404,7 +421,7 @@ class GameCore {
 			
 			enemy.x = this.width - (time_now - enemy.start);
 
-			return enemy.x > 0;
+			return enemy.x > -this.images.enemy1.width;
 		});
 	}
 
