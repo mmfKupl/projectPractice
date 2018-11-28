@@ -13,7 +13,7 @@ class PlayerTypeMenu extends Component {
 			<div className="wrapper">
 				<div className="menu-box">
 					{/* <h1>ЗОНА ПОРАЖЕНИЯ</h1> */}
-					<h1>ТУПОЕ ДЕРЬМО ТУПОВО ДЕРЬМА</h1>
+					<h1>ТУПОЕ ДЕРЬМО ТУПОГО ДЕРЬМА</h1>
 					<div className="buttons-box">
 						<div ref="single" onClick={() => {this.props.updatePage('choosePlayer', 'single')}} className="button">ОДИНОЧНЫЙ</div>
 						<div ref="multy" onClick={() => {this.props.updatePage('choosePlayer', 'multy')}} className="button">МУЛЬТИПЛЕЕР</div>

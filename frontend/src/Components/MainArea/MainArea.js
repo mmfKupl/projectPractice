@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import GameCore from './GameCore';
 import './MainArea.css';
+import uniqid from 'uniqid';
 
 class MainArea extends Component {
 	constructor(props) {
@@ -9,22 +10,20 @@ class MainArea extends Component {
 		this.state = {
 			width: 0,
 			height: 0,
-			ws: props.ws,
 			data: {}
 		};
 	}
 
 	_onMouseMove(e) {
-		this.state.ws.send(JSON.stringify({
-			x: e.clientX,
-			y: e.clientY
-		}))
+		GameCore.setPosition(e.clientX, e.clientY);
 	}
 
-	async _getMainImage() {
-		return fetch('/api/getMainImage', { method: 'GET' })
-			.then(res => res.blob())
-			.then(data => data);
+	_onMouseDown(e) {
+		GameCore.startFire();
+	}
+
+	_onMouseUp(e) {
+		GameCore.stopFire();
 	}
 
 	componentDidMount() { 
@@ -32,10 +31,9 @@ class MainArea extends Component {
 			height = window.screen.availHeight;
 		this.setState({
 			width: width,
-			height: height,
-			GameCore: new GameCore(this.refs['MainArea-canvas'], width, height)
+			height: height + 39
 		}, () => {
-			this.state.GameCore.init();
+			GameCore.init('kek', this.refs['MainArea-canvas'], this.state.width, this.state.height, uniqid('ID'));
 		})
 	}
 
@@ -43,7 +41,15 @@ class MainArea extends Component {
 	render() {
 		return (
 			<div height={this.state.height} width={this.state.width}>
-				<canvas onMouseMove={this._onMouseMove.bind(this)} ref="MainArea-canvas" className="MainArea-wrapper" height={this.state.height} width={this.state.width}></canvas>
+				<canvas 
+					onMouseMove={this._onMouseMove.bind(this)} 
+					onMouseDown={this._onMouseDown.bind(this)}
+					onMouseUp={this._onMouseUp.bind(this)}
+					ref="MainArea-canvas" 
+					className="MainArea-wrapper" 
+					height={this.state.height} 
+					width={this.state.width}
+				></canvas>
 			</div>
 		)
 	}

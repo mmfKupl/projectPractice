@@ -17,12 +17,11 @@ wss.on('connection', ws => {
     ws.on('message', message => {
 
         //log the received message and send it back to the client
-        // console.log(JSON.parse(message).x)
-        ws.send(`Hello, you sent -> ${message}`);
+        ws.send(`${message}`);
     });
 
     //send immediatly a feedback to the incoming connection    
-    ws.send('Hi there, I am a WebSocket server');
+    ws.send('{}');
 });
 
 app.use(routers);
