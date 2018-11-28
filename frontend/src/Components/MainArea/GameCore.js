@@ -10,7 +10,7 @@ class GameCore {
 		this.fireFlag = false;
 		this.bullets = [];
 		this.enemys = [];
-		this.bullet_speed = 0.1;
+		this.bullet_speed = 0.7;
 	}
 
 	async init(m, canvas, width, height, id) {
@@ -96,8 +96,9 @@ class GameCore {
 
 			this.renderBags();
 			this.renderBullets();
-			//this.initEnemy();
+			this.initEnemy();
 			this.renderEnemys();
+			this.hit();
 
 		}
 		requestAnimationFrame(() => {
@@ -406,6 +407,22 @@ class GameCore {
 
 			return enemy.x > 0;
 		});
+	}
+
+	hit() {
+		for(let i = 0; i < this.enemys.length; i++) {
+			for(let j = 0; j < this.bullets.length; j++) {
+				let enemy = this.enemys[i],
+					bullet = this.bullets[j];
+				if(enemy.x <= (bullet.x + this.images.turret_bullet.width) && (enemy.y + this.images.enemy1.height) >= bullet.y) {
+					enemy.delete = true;
+					bullet.delete = true;
+				}
+			}
+		}
+
+		this.bullets = this.bullets.filter(el => !el.delete);
+		this.enemys = this.enemys.filter(el => !el.delete);
 	}
 
 }
