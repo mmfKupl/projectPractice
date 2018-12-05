@@ -60,15 +60,6 @@ class GameCore {
 		for (let el in this.ENEMY_DIM) {
 			this.ENEMY_DIM[el] = Math.ceil(this.ENEMY_DIM[el])
 		}
-		console.log(this.GUN_DIM)
-		this.MAIN_CORD = {
-			X: 80,
-			Y: this.height - 150
-		};
-		this.GUN_CORD = {
-			X: 80,
-			Y: this.height - 150
-		};
 		// this.ws = new WebSocket("ws://localhost:8999/");
 		// this.ws.onopen = () => {
 		// 	console.log('подключились');
@@ -162,24 +153,17 @@ class GameCore {
 			this.drawImage(this.images.background);
 			this.ctx.fillStyle = "#000";
 			this.ctx.fillRect(0, 0, this.width, this.height);
-			// this.drawImage(this.images.ground, 0,this.height * 0.75, this.images.ground.width - 50, this.images.ground.height - 50);
-			// this.renderEnemy1();
 			this.renderGun();
 
-			let turretDimensions = this.getTurretDimensions();
-			// this.drawImage(this.images.turret_body, turretDimensions._X, turretDimensions._Y, turretDimensions._WIDTH, turretDimensions._HEIGHT);
 			let body = this.images.turret_body;
-			// this.drawImage(body, this.MAIN_CORD.X, this.MAIN_CORD.Y, body.width, body.height);
-			// this.fire();
 
-			// this.renderBags();
 			this.renderBullets();
 			this.renderEnemys();
 			this.hit();
 			this.renderScore();
 			this.renderCrosshair();
-			// this.drawAimLine();
-
+			this.drawAimLine();	
+			this.ctx.fillText(this.currentAngle, 150, 150);
 		}
 		requestAnimationFrame(() => {
 			// if(!this.bulletFlag) {
@@ -189,29 +173,16 @@ class GameCore {
 	}
 
 	getAngle(center, point) {
-		// let x = point.x - center.x,
-		// 	y = point.y - center.y;
 		let w = point.x - center.x,
 			h = - point.y + center.y;
-		// console.log(w, h,h/w, Math.atan(h/w));
-		// console.log(Math.atan(h/w)/this.RADIANS);
-		return (180 - Math.atan(h/w)/this.RADIANS);
-		// if(x === 0) return (y > 0)? 180 : 0;
 
-		// let a = Math.atan(y/x) * 180/Math.PI;
+		let A = Math.atan2(h, w) / this.RADIANS;
+		A = (A < 0) ? A + 360 : A;
 
-		// a = (x > 0)? a + 90 : a + 270;
-
-		// return a - 50;
+		return -A;
 	}
 
 	renderGun() {
-		let gun = this.images.turret_gun,
-			w = gun.width + HALF,
-			h = gun.height + HALF,
-			x = this.GUN_DIM.X, y = this.GUN_DIM.Y,
-			angle = this.getAngle({ x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y }, { x: this.x, y: this.y });
-
 
 		let _x = this.GUN_DIM.X, _y = this.GUN_DIM.Y,
 			_w_b = this.GUN_DIM.BODY_W, _h_b = this.GUN_DIM.BODY_H,
@@ -227,16 +198,7 @@ class GameCore {
 			
 		// this.ctx.fillStyle = "rgba(256, 256, 256, .5)";
 		// this.ctx.fillRect(_x, _y, _w_h, _h_h)
-
-
-
-
-
-		// this.drawRotateRect(x, y, w, h, angle, "#f00");
 		this.drawRotateRect(_x + 0.5 * _w_h, _y + 0.5 * _h_h, _w_h, _h_h, _angle, "#0f0", true); // <-- current gun
-		// this.drawRotateImage(gun, x, y, w, h, angle);
-		// this.ctx.fillRect(x, y, w, h);
-
 	}
 
 	drawRotateRect(x, y, w, h, angle, color, stroke = false) {
@@ -347,16 +309,16 @@ class GameCore {
 	}
 
 	drawAimLine() {
-		const _x = this.GUN_CORD.X, _y = this.GUN_CORD.Y;
-		const x = _x + HALF, y = _y + HALF;
+		const _x = this.GUN_DIM.X, _y = this.GUN_DIM.Y;
+		const x = Math.ceil(_x + this.GUN_DIM.HEAD_W*0.5) + HALF, y = Math.ceil(_y  + this.GUN_DIM.HEAD_H*0.5) + HALF;
 
-		
+		this.ctx.lineWidth = 0.5;
 		this.ctx.beginPath();
 		this.ctx.strokeStyle = '#00ff00';
 		this.ctx.moveTo(x, y);
 		this.ctx.lineTo(this.x, this.y);
 		this.ctx.stroke();
-		this.ctx.strokeStyle = 'black';
+		this.ctx.strokeStyle = '#fff';
 
 		this.ctx.beginPath();
 		this.ctx.moveTo(x, HALF);
@@ -433,7 +395,7 @@ class GameCore {
 		if(this.fireFlag) {
 			setTimeout(() => {
 				this.fire();
-			}, 300);
+			}, 150);
 		}
 	}
 
@@ -456,13 +418,18 @@ class GameCore {
 		const bullet_speed = this.bullet_speed;
 		this.bullets = this.bullets.filter(bullet => {
 			let time_now = performance.now();
+
 			const x_start = bullet.start_x, y_start = bullet.start_y;
 			let angl = -bullet.angle;
-			angl = Number((angl * this.RADIANS).toFixed(2));
-			bullet.x = (time_now - bullet.start)*bullet_speed + x_start;
-			bullet.y = y_start - (time_now - bullet.start) * bullet_speed * (Math.tan(angl)) ; 
+			let xc = ((angl <= 90 && angl >= 270)) ? time_now - bullet.start : bullet.start - time_now;
+			let yc = (angl >= 0 && angl <= 180) ? time_now - bullet.start : bullet.start - time_now; 
 
-			return (bullet.x < this.width) && (bullet.y > 0);
+			angl = Number((angl * this.RADIANS).toFixed(2));
+			bullet.x = (xc) * bullet_speed + x_start;
+			bullet.y = y_start - (yc) * bullet_speed * (Math.tan(angl));
+			console.log(bullet.x, bullet.y) 
+
+			return (bullet.x < this.width && bullet.x > 0) && (bullet.y > 0 && bullet.y < this.height);
 		});
 	}
 
