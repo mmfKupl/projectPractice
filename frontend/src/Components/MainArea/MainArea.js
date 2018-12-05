@@ -26,6 +26,14 @@ class MainArea extends Component {
 		GameCore.stopFire();
 	}
 
+	_onKeyDown(e) {
+		GameCore.onKeyDown(e);
+	}
+
+	_onKeyUp(e) {
+		GameCore.onKeyUp(e);
+	}
+
 	componentDidMount() { 
 		let width = window.screen.availWidth,
 			height = window.screen.availHeight;
@@ -42,6 +50,9 @@ class MainArea extends Component {
 		return (
 			<div height={this.state.height} width={this.state.width}>
 				<canvas 
+					tabIndex="0"
+					onKeyDown={this._onKeyDown.bind(this)}
+					onKeyUp={this._onKeyUp.bind(this)}
 					onMouseMove={this._onMouseMove.bind(this)} 
 					onMouseDown={this._onMouseDown.bind(this)}
 					onMouseUp={this._onMouseUp.bind(this)}
