@@ -18,11 +18,28 @@ class GameCore {
 
 	async init(m, canvas, width, height, id) {
 		this.userId = id;
+		this.screen_relation = {
+			W: 16 / width,
+			H: 9 / height
+		};
 		this.canvas = canvas;
 		this.width = width;
 		this.height = height;
 		this.x = 0;
 		this.y = 0;
+		this.GUN_DIM = {
+			BODY_W: 1 / this.screen_relation.W,
+			BODY_H: 1 / this.screen_relation.H,
+			HEAD_W: 1 / this.screen_relation.W,
+			HEAD_H: 0.5 / this.screen_relation.H,
+			X: 1 / this.screen_relation.W,
+			Y: 7 / this.screen_relation.H
+		}
+
+		// for (let el in this.GUN_DIM) {
+		// 	this.GUN_DIM[el] = Math.ceil(this.GUN_DIM[el])
+		// }
+
 		this.MAIN_CORD = {
 			X: 80,
 			Y: this.height - 150
@@ -165,14 +182,14 @@ class GameCore {
 		let gun = this.images.turret_gun,
 			w = gun.width + HALF,
 			h = gun.height + HALF,
-			x = this.GUN_CORD.X, y = this.GUN_CORD.Y,
+			x = this.GUN_DIM.X, y = this.GUN_DIM.Y,
 			angle = this.getAngle({ x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y }, { x: this.x, y: this.y });
 		// this.currentAngle = angle;
 
 
-		let _x = this.GUN_CORD.X, _y = this.GUN_CORD.Y,
-			_w_b = 60, _h_b = 100,
-			_w_h = 30, _h_h = 100,
+		let _x = this.GUN_DIM.X, _y = this.GUN_DIM.Y,
+			_w_b = this.GUN_DIM.BODY_W, _h_b = this.GUN_DIM.BODY_H,
+			_w_h = this.GUN_DIM.HEAD_W, _h_h = this.GUN_DIM.HEAD_H,
 			_angle = this.getAngle({ x: _x, y: _y }, { x: this.x, y: this.y });
 
 		//render gun body
