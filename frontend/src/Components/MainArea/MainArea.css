@@ -2,3 +2,11 @@
 	overflow: hidden;
 	/* background-color: #f2f2f2; */
 }
+
+* {
+	cursor: none;
+}
+
+p {
+	position: absolute;
+}

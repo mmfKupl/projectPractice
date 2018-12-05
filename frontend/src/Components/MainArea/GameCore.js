@@ -2,7 +2,6 @@ const HALF = 0.5;
 
 class GameCore {
 	constructor(m) {
-		console.log(m);
 		this.images = {};
 		this.ctx = {};
 		this.RADIANS = Math.PI/180;
@@ -14,19 +13,23 @@ class GameCore {
 		this.enemys_speed = 1;
 		this.timer_value = 0;
 		this.temp_timer_value = 0;
+		this.score = 0;
 	}
 
 	async init(m, canvas, width, height, id) {
-		console.log(id);
 		this.userId = id;
 		this.canvas = canvas;
 		this.width = width;
 		this.height = height;
 		this.x = 0;
 		this.y = 0;
+		this.MAIN_CORD = {
+			X: 80,
+			Y: this.height - 150
+		};
 		this.GUN_CORD = {
-			X: 100,
-			Y: this.correction(712,this.height) + 39
+			X: 80,
+			Y: this.height - 150
 		};
 		// this.ws = new WebSocket("ws://localhost:8999/");
 		// this.ws.onopen = () => {
@@ -89,26 +92,49 @@ class GameCore {
 		return Math.ceil(temp);
 	}
 
+	renderScore() {
+		const x = 10, y = 30;
+		this.ctx.font = "15pt Times New Roman";
+		this.ctx.fillStyle = "#fff";
+		this.ctx.fillText(`SCORE: ${this.score}`, x, y);
+	}
+
+	renderCrosshair() {
+		const x = this.x + 0.5, y = this.y + 0.5, r = 10;
+		this.ctx.beginPath();
+		this.ctx.strokeStyle = "#fff";
+		this.ctx.arc(x, y, r, 0, 360);
+		this.ctx.moveTo(x - r*1.5, y);
+		this.ctx.lineTo(x + r*1.5, y);
+
+		this.ctx.moveTo(x, y - r*1.5);
+		this.ctx.lineTo(x, y + r*1.5);
+
+		this.ctx.stroke();
+	}
+
 	renderScene() {
 		this.initEnemy();
-		this.currentAngle = this.getAngle({x: 100, y: 659}, {x: this.x,y: this.y});
+		this.currentAngle = this.getAngle({x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y}, {x: this.x,y: this.y});
 		if(this.ctx.drawImage) {
 			this.drawImage(this.images.background);
-			this.drawImage(this.images.ground, 0,this.height * 0.75, this.images.ground.width - 50, this.images.ground.height - 50);
-			this.drawAimLine();
+			// this.drawImage(this.images.ground, 0,this.height * 0.75, this.images.ground.width - 50, this.images.ground.height - 50);
 			// this.renderEnemy1();
 			this.renderGun();
 
 			let turretDimensions = this.getTurretDimensions();
 			// this.drawImage(this.images.turret_body, turretDimensions._X, turretDimensions._Y, turretDimensions._WIDTH, turretDimensions._HEIGHT);
 			let body = this.images.turret_body;
-			this.drawImage(body, 40, (this.correction(784,this.height) + 39) - body.height, body.width, body.height);
+			// this.drawImage(body, this.MAIN_CORD.X, this.MAIN_CORD.Y, body.width, body.height);
 			// this.fire();
 
-			this.renderBags();
+			// this.renderBags();
 			this.renderBullets();
 			this.renderEnemys();
 			this.hit();
+			this.renderScore();
+			this.renderCrosshair();
+			this.drawAimLine();
 
 		}
 		requestAnimationFrame(() => {
@@ -140,10 +166,39 @@ class GameCore {
 			w = gun.width + HALF,
 			h = gun.height + HALF,
 			x = this.GUN_CORD.X, y = this.GUN_CORD.Y,
-			angle = this.getAngle({ x: 100, y: 659 }, { x: this.x, y: this.y }) - 50;
+			angle = this.getAngle({ x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y }, { x: this.x, y: this.y });
 		// this.currentAngle = angle;
-		this.drawRotateImage(gun, x, y, w, h, angle)
 
+
+		let _x = this.GUN_CORD.X, _y = this.GUN_CORD.Y,
+			_w_b = 60, _h_b = 100,
+			_w_h = 30, _h_h = 100,
+			_angle = this.getAngle({ x: _x, y: _y }, { x: this.x, y: this.y });
+
+		//render gun body
+		this.ctx.fillStyle = "#00f";
+		this.ctx.fillRect(_x - 0.5 * _w_b, _y, _w_b, _h_b);
+		//
+
+
+
+
+
+		// this.drawRotateRect(x, y, w, h, angle, "#f00");
+		this.drawRotateRect(_x, _y, _w_h, _h_h, _angle, "#0f0"); // <-- current gun
+		// this.drawRotateImage(gun, x, y, w, h, angle);
+		// this.ctx.fillRect(x, y, w, h);
+
+	}
+
+	drawRotateRect(x, y, w, h, angle, color) {
+		this.ctx.save();
+		this.ctx.translate(x, y);
+		this.ctx.rotate(angle * this.RADIANS);
+		this.ctx.fillStyle = color;
+		this.ctx.fillRect(-w*0.5, -h*0.5, w, h);
+		// this.ctx.drawImage(image, -w*HALF, -h*HALF);
+		this.ctx.restore();
 	}
 
 	drawRotateImage(image, x, y, w, h, angle) {
@@ -199,7 +254,6 @@ class GameCore {
 			.then(res => {
 				let bg = new Image(100, 100);
 				bg.onload = function(){
-					console.log('asdasd')
 				}
 				bg.src = res;
 				document.body.appendChild(bg)
@@ -235,13 +289,12 @@ class GameCore {
 	confirmMessage(data = '{}') {
 		data = JSON.parse(data);
 		if(data.userId !== this.userId) {
-			console.log('HEY');
 		}
 	}
 
 	drawAimLine() {
 		const _x = this.GUN_CORD.X, _y = this.GUN_CORD.Y;
-		const x = _x - 10 + HALF, y = _y - 10 + HALF;
+		const x = _x + HALF, y = _y + HALF;
 
 		
 		this.ctx.beginPath();
@@ -310,8 +363,8 @@ class GameCore {
 	fire() {
 		
 		let default_bullet = {
-			x: 100,
-			y: 665,
+			x: this.MAIN_CORD.X,
+			y: this.MAIN_CORD.Y,
 			angle: this.currentAngle,
 			start: performance.now()
 		};
@@ -346,7 +399,7 @@ class GameCore {
 		const bullet_speed = this.bullet_speed;
 		this.bullets = this.bullets.filter(bullet => {
 			let time_now = performance.now();
-			const x_start = 100, y_start = 649;
+			const x_start = this.MAIN_CORD.X, y_start = this.MAIN_CORD.Y;
 			let angl = 90 - bullet.angle;
 			angl = Number((angl*this.RADIANS).toFixed(2));
 			bullet.x = (time_now - bullet.start)*bullet_speed + x_start;
@@ -362,9 +415,9 @@ class GameCore {
 
 	renderBullet(timePassed, angle) {
 		(timePassed < 0) && (timePassed = 0);
-		let x = timePassed * 0.4 + 100,
-			temp = (x - 100) * (90 - angle) * this.RADIANS,
-			y = 659 - temp,
+		let x = timePassed * 0.4 + this.MAIN_CORD.X,
+			temp = (x - this.MAIN_CORD.X) * (90 - angle) * this.RADIANS,
+			y = this.MAIN_CORD.Y - temp,
 			bullet = this.images.turret_bullet,
 			w = bullet.width,
 			h = bullet.height;
@@ -394,7 +447,6 @@ class GameCore {
 				//hp
 			}
 			this.temp_timer_value = this.timer_value;
-			console.log(default_enemy);
 			this.enemys.push(default_enemy);
 		}
 	}
@@ -421,8 +473,12 @@ class GameCore {
 			let time_now = performance.now() * speed;
 			
 			enemy.x = this.width - (time_now - enemy.start);
-
-			return enemy.x > -this.images.enemy1.width;
+			if(enemy.x > -this.images.enemy1.width) {
+				return true;
+			} else {
+				this.score--;
+				return false;
+			}
 		});
 	}
 
@@ -445,6 +501,7 @@ class GameCore {
 					enemy.y <= (bullet.y + blH)
 					)
 				) {
+					this.score++;
 					enemy.delete = true;
 					bullet.delete = true;
 				}
