@@ -33,13 +33,13 @@ class GameCore {
 			HEAD_W: 1 / this.screen_relation.W,
 			HEAD_H: 0.5 / this.screen_relation.H,
 			X: 1 / this.screen_relation.W,
-			Y: 7 / this.screen_relation.H
+			Y: 7.5 / this.screen_relation.H
 		}
 
-		// for (let el in this.GUN_DIM) {
-		// 	this.GUN_DIM[el] = Math.ceil(this.GUN_DIM[el])
-		// }
-
+		for (let el in this.GUN_DIM) {
+			this.GUN_DIM[el] = Math.ceil(this.GUN_DIM[el])
+		}
+		console.log(this.GUN_DIM)
 		this.MAIN_CORD = {
 			X: 80,
 			Y: this.height - 150
@@ -135,6 +135,8 @@ class GameCore {
 		this.currentAngle = this.getAngle({x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y}, {x: this.x,y: this.y});
 		if(this.ctx.drawImage) {
 			this.drawImage(this.images.background);
+			this.ctx.fillStyle = "#000";
+			this.ctx.fillRect(0, 0, this.width, this.height);
 			// this.drawImage(this.images.ground, 0,this.height * 0.75, this.images.ground.width - 50, this.images.ground.height - 50);
 			// this.renderEnemy1();
 			this.renderGun();
@@ -151,7 +153,7 @@ class GameCore {
 			this.hit();
 			this.renderScore();
 			this.renderCrosshair();
-			this.drawAimLine();
+			// this.drawAimLine();
 
 		}
 		requestAnimationFrame(() => {
@@ -168,7 +170,7 @@ class GameCore {
 			h = - point.y + center.y;
 		// console.log(w, h,h/w, Math.atan(h/w));
 		// console.log(Math.atan(h/w)/this.RADIANS);
-		return (90 - Math.atan(h/w)/this.RADIANS);
+		return (180 - Math.atan(h/w)/this.RADIANS);
 		// if(x === 0) return (y > 0)? 180 : 0;
 
 		// let a = Math.atan(y/x) * 180/Math.PI;
@@ -184,36 +186,44 @@ class GameCore {
 			h = gun.height + HALF,
 			x = this.GUN_DIM.X, y = this.GUN_DIM.Y,
 			angle = this.getAngle({ x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y }, { x: this.x, y: this.y });
-		// this.currentAngle = angle;
 
 
 		let _x = this.GUN_DIM.X, _y = this.GUN_DIM.Y,
 			_w_b = this.GUN_DIM.BODY_W, _h_b = this.GUN_DIM.BODY_H,
 			_w_h = this.GUN_DIM.HEAD_W, _h_h = this.GUN_DIM.HEAD_H,
-			_angle = this.getAngle({ x: _x, y: _y }, { x: this.x, y: this.y });
+			_angle = this.getAngle({ x: _x + 0.5 * _w_h, y: _y + 0.5 * _h_h }, { x: this.x, y: this.y });
 
 		//render gun body
 		this.ctx.fillStyle = "#00f";
-		this.ctx.fillRect(_x - 0.5 * _w_b, _y, _w_b, _h_b);
+		this.ctx.fillRect(_x, _y, _w_b, _h_b);
 		//
+			
+		this.ctx.fillStyle = "#f0f";
+		this.ctx.fillRect(_x, _y, _w_h, _h_h)
 
 
 
 
 
 		// this.drawRotateRect(x, y, w, h, angle, "#f00");
-		this.drawRotateRect(_x, _y, _w_h, _h_h, _angle, "#0f0"); // <-- current gun
+		this.drawRotateRect(_x + 0.5 * _w_h, _y + 0.5 * _h_h, _w_h, _h_h, _angle, "#0f0", true); // <-- current gun
 		// this.drawRotateImage(gun, x, y, w, h, angle);
 		// this.ctx.fillRect(x, y, w, h);
 
 	}
 
-	drawRotateRect(x, y, w, h, angle, color) {
+	drawRotateRect(x, y, w, h, angle, color, stroke = false) {
 		this.ctx.save();
 		this.ctx.translate(x, y);
 		this.ctx.rotate(angle * this.RADIANS);
-		this.ctx.fillStyle = color;
-		this.ctx.fillRect(-w*0.5, -h*0.5, w, h);
+		if(stroke) {
+			this.ctx.lineWidth = 2;
+			this.ctx.strokeStyle = color;
+			this.ctx.strokeRect(-w*0.5, -h*0.5, w, h);
+		} else {
+			this.ctx.fillStyle = color;
+			this.ctx.fillRect(-w*0.5, -h*0.5, w, h);
+		}
 		// this.ctx.drawImage(image, -w*HALF, -h*HALF);
 		this.ctx.restore();
 	}
