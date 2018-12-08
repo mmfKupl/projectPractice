@@ -9,8 +9,15 @@ class GameCore {
 		this.fireFlag = false;
 		this.bullets = [];
 		this.enemys = [];
-		this.bullet_speed = 1;
-		this.enemys_speed = 1;
+		this.bullet_speed_init = 0.3;
+		this.bullet_speed = this.bullet_speed_init;
+		this.shot_delay_init = 10;
+		this.shot_delay = this.shot_delay_init;
+		this.enemys_speed_init = 0.01;
+		this.enemys_speed = this.enemys_speed_init;
+		this.enemys_spawn_delay_init = 5;
+		this.enemys_spawn_delay = this.enemys_spawn_delay_init;
+		this.gun_speed = 6;
 		this.timer_value = 0;
 		this.temp_timer_value = 0;
 		this.score = 0;
@@ -18,14 +25,18 @@ class GameCore {
 		this.curKey = '';
 		this.curKeysX = [];
 		this.curKeysY = [];
+		this.shotFlag = true;
 		this.movetimer = null;
+		this.zoom = 2;
+		this.level = 1;
+		this.level_step = 2;
 	}
 
 	async init(m, canvas, width, height, id) {
 		this.userId = id;
 		this.screen_relation = {
-			W: 16 / width,
-			H: 9 / height
+			W: 16 * this.zoom / width,
+			H: 8 * this.zoom / height
 		};
 		this.canvas = canvas;
 		this.width = width;
@@ -38,7 +49,7 @@ class GameCore {
 			HEAD_W: 1 / this.screen_relation.W,
 			HEAD_H: 0.5 / this.screen_relation.H,
 			X: 1 / this.screen_relation.W,
-			Y: 4.5 / this.screen_relation.H
+			Y: 5 / this.screen_relation.H
 		}
 
 		this.BULLET_DIM = {
@@ -86,7 +97,7 @@ class GameCore {
 		this.timer_value++;
 		setTimeout(() => {
 			this.startTimer();
-		}, 250);
+		}, this.enemys_spawn_delay);
 	}
 
 	async setMainImage() {
@@ -121,11 +132,14 @@ class GameCore {
 		return Math.ceil(temp);
 	}
 
-	renderScore() {
-		const x = 10, y = 30;
+	renderStats() {
+		const x = 10, y = 30, y_step = 30;
 		this.ctx.font = "15pt Times New Roman";
 		this.ctx.fillStyle = "#fff";
-		this.ctx.fillText(`SCORE: ${this.score}`, x, y);
+		this.ctx.fillText(`SCORE: ${this.score}; LEVEL: ${this.level.toFixed(3)};`, x, y);
+		this.ctx.fillText(`BULLET SPEED: ${this.bullet_speed.toFixed(2)}; SHOT DELAY: ${this.shot_delay.toFixed()}; ENEMY DELAY: ${this.enemys_spawn_delay.toFixed()}; ENEMY SPEED: ${this.enemys_speed.toFixed(2)};`, x, y + y_step);
+		this.ctx.fillText(`CURSOR - X: ${this.x}; Y: ${this.y};`, x, y + 2 * y_step);
+		this.ctx.fillText(`GUN - X: ${this.GUN_DIM.X}; Y: ${this.GUN_DIM.Y}; SPEED: ${this.gun_speed}`, x, y + 3 * y_step);
 	}
 
 	renderCrosshair() {
@@ -144,12 +158,19 @@ class GameCore {
 	}
 
 	renderScene() {
+		this.level += Math.pow(0.01, this.level_step);
+		this.shot_delay = 1000 / (this.shot_delay_init * this.level);
+		this.enemys_spawn_delay = 1000 / (this.enemys_spawn_delay_init * this.level);
+		this.enemys_speed = 100 * this.enemys_speed_init * this.level;
+		this.bullet_speed = 10 * this.bullet_speed_init * this.level;
 		this.initEnemy();
+		this.moveGun();
+		this.fire();
 		let _x = this.GUN_DIM.X, _y = this.GUN_DIM.Y,
 			_w_h = this.GUN_DIM.HEAD_W, _h_h = this.GUN_DIM.HEAD_H;
 		// this.currentAngle = this.getAngle({x: this.MAIN_CORD.X, y: this.MAIN_CORD.Y}, {x: this.x,y: this.y});
 		this.currentAngle = this.getAngle({ x: _x + 0.5 * _w_h, y: _y + 0.5 * _h_h }, { x: this.x, y: this.y });
-		if(this.ctx.drawImage) {
+		// if(this.ctx.drawImage) {
 			this.drawImage(this.images.background);
 			this.ctx.fillStyle = "#000";
 			this.ctx.fillRect(0, 0, this.width, this.height);
@@ -160,11 +181,10 @@ class GameCore {
 			this.renderBullets();
 			this.renderEnemys();
 			this.hit();
-			this.renderScore();
+			this.renderStats();
 			this.renderCrosshair();
 			this.drawAimLine();	
-			this.ctx.fillText(this.currentAngle, 150, 150);
-		}
+		// }
 		requestAnimationFrame(() => {
 			// if(!this.bulletFlag) {
 			this.renderScene();
@@ -320,31 +340,31 @@ class GameCore {
 		this.ctx.stroke();
 		this.ctx.strokeStyle = '#fff';
 
-		this.ctx.beginPath();
-		this.ctx.moveTo(x, HALF);
-		this.ctx.lineTo(x, this.height + HALF);
-		this.ctx.stroke();
+		// this.ctx.beginPath();
+		// this.ctx.moveTo(x, HALF);
+		// this.ctx.lineTo(x, this.height + HALF);
+		// this.ctx.stroke();
 
-		this.ctx.beginPath();
-		this.ctx.moveTo(this.x, HALF);
-		this.ctx.lineTo(this.x, this.height + HALF);
-		this.ctx.stroke();
+		// this.ctx.beginPath();
+		// this.ctx.moveTo(this.x, HALF);
+		// this.ctx.lineTo(this.x, this.height + HALF);
+		// this.ctx.stroke();
 
-		this.ctx.beginPath();
-		this.ctx.moveTo(HALF, this.y);
-		this.ctx.lineTo(this.width + HALF, this.y);
-		this.ctx.stroke();
+		// this.ctx.beginPath();
+		// this.ctx.moveTo(HALF, this.y);
+		// this.ctx.lineTo(this.width + HALF, this.y);
+		// this.ctx.stroke();
 
-		this.ctx.beginPath();
-		this.ctx.moveTo(HALF, y);
-		this.ctx.lineTo(this.width + HALF, y);
-		this.ctx.stroke();
+		// this.ctx.beginPath();
+		// this.ctx.moveTo(HALF, y);
+		// this.ctx.lineTo(this.width + HALF, y);
+		// this.ctx.stroke();
 
-		this.ctx.font="20px Times New Roman";
-		this.ctx.fillStyle = '#fff';
-		this.ctx.fillText( this.x + ', ' + this.y + ', ' + this.currentAngle, this.x, this.y);
-		this.ctx.fillText( _x + ', ' + _y, _x, _y);
-		this.ctx.file = 'black';
+		// this.ctx.font="20px Times New Roman";
+		// this.ctx.fillStyle = '#fff';
+		// this.ctx.fillText( this.x + ', ' + this.y + ', ' + this.currentAngle, this.x, this.y);
+		// this.ctx.fillText( _x + ', ' + _y, _x, _y);
+		// this.ctx.file = 'black';
 	}
 
 	animate (draw, duration, angle = 1, flag = true) {
@@ -373,63 +393,64 @@ class GameCore {
 
 	startFire() {
 		this.fireFlag = true;
-		this.fire();
 	}
 
 	fire() {
-		
-		let default_bullet = {
-			x: this.GUN_DIM.X,
-			y: this.GUN_DIM.Y,
-			start_x: this.GUN_DIM.X,
-			start_y: this.GUN_DIM.Y,
-			angle: this.currentAngle,
-			start: performance.now()
-		};
-		this.bullets.push(default_bullet);
-		// if(this.fireFlag === true) {
-		// 	console.log("currentAngle: " + this.currentAngle);
-		// 	this.animate(this.renderBullet.bind(this), 3000, this.currentAngle + 50);
-		// }
-		// requestAnimationFrame(this.fire.bind(this));
-		if(this.fireFlag) {
-			setTimeout(() => {
-				this.fire();
-			}, 150);
+		if(this.fireFlag && this.shotFlag) {
+			this.shotFlag = false;
+			let default_bullet = {
+				x: this.GUN_DIM.X,
+				y: this.GUN_DIM.Y,
+				start_x: this.GUN_DIM.X,
+				start_y: this.GUN_DIM.Y,
+				angle: this.currentAngle,
+				path: 0,
+				bullet_speed: this.bullet_speed,
+				start: performance.now()
+			};
+			this.bullets.push(default_bullet);
+			setTimeout( () => {
+				this.shotFlag = true;
+			}, this.shot_delay);
 		}
 	}
 
 	renderBullets() {
-		const img = this.images.turret_bullet;
-		this.bullets.forEach(bullet => {
-			let x = bullet.x,
-				y = bullet.y,
-				w = this.BULLET_DIM.W,
-				h = this.BULLET_DIM.H,
-				angle = bullet.angle;
-			// this.drawImage(img, x, y, w, h);
-			// this.drawRotateImage(img, x, y, w, h, angle);
-			this.drawRotateRect(x + 0.5 * this.GUN_DIM.HEAD_W, y + 0.5 * this.GUN_DIM.HEAD_H, w, h, angle, '#0ff', true);
-		});
-		this.recountBulletsCords();
+		if(this.bullets.length) {
+			this.bullets.forEach(bullet => {
+				let x = bullet.x,
+					y = bullet.y,
+					w = this.BULLET_DIM.W,
+					h = this.BULLET_DIM.H,
+					angle = bullet.angle;
+				this.drawRotateRect(x + 0.5 * this.GUN_DIM.HEAD_W, y + 0.5 * this.GUN_DIM.HEAD_H, w, h, angle, '#0ff', true);
+			});
+			this.recountBulletsCords();
+		}
 	}
 
 	recountBulletsCords() {
-		const bullet_speed = this.bullet_speed;
 		this.bullets = this.bullets.filter(bullet => {
-			let time_now = performance.now();
-
-			const x_start = bullet.start_x, y_start = bullet.start_y;
+			
+			bullet.path += 1;
+			let bullet_speed = bullet.bullet_speed;
+			let path = bullet.path;
 			let angl = -bullet.angle;
-			let xc = ((angl <= 90 && angl >= 270)) ? time_now - bullet.start : bullet.start - time_now;
-			let yc = (angl >= 0 && angl <= 180) ? time_now - bullet.start : bullet.start - time_now; 
+			let _angl = Number((angl * this.RADIANS).toFixed(2));			;
+			let _x = path * Math.cos(_angl);
+			let _y = path * Math.sin(_angl);
 
-			angl = Number((angl * this.RADIANS).toFixed(2));
-			bullet.x = (xc) * bullet_speed + x_start;
-			bullet.y = y_start - (yc) * bullet_speed * (Math.tan(angl));
-			console.log(bullet.x, bullet.y) 
+			path /= bullet_speed;
 
-			return (bullet.x < this.width && bullet.x > 0) && (bullet.y > 0 && bullet.y < this.height);
+			if(angl <= 90 && angl >= 270) {
+				bullet.x -= _x / path;
+			} else {
+				bullet.x += _x / path;
+			}
+			bullet.y -= _y / path;
+			console.log(bullet.x + this.BULLET_DIM.W)
+
+			return (bullet.x <= this.width && bullet.x + this.BULLET_DIM.W >= 0) && (bullet.y + this.BULLET_DIM.H >= 0 && bullet.y <= this.height);
 		});
 	}
 
@@ -450,7 +471,7 @@ class GameCore {
 			this.enemys.push(default_enemy);
 			if(Math.random()%2) {
 				default_enemy = {
-					x: this.width + enemy_w,
+					x: 2 * this.width + enemy_w,
 					y: Math.random() * (this.height - 3*this.ENEMY_DIM.H) + this.ENEMY_DIM.H,
 					start: performance.now()
 				}
@@ -479,11 +500,11 @@ class GameCore {
 	}
 
 	recountEnemysCords() {
-		const speed = 0.5;
+		const speed = this.enemys_speed;
 		this.enemys = this.enemys.filter(enemy => {
-			let time_now = performance.now() * speed;
-			
-			enemy.x = this.width - (time_now - enemy.start);
+			let time_now = performance.now() + speed;
+			let prev_x = enemy.x;
+			enemy.x -=speed;
 			if(enemy.x > -this.images.enemy1.width) {
 				return true;
 			} else {
@@ -524,22 +545,21 @@ class GameCore {
 	}
 
 	moveGun() {
-		let xk = this.curKeysX[0] || '', yk = this.curKeysY[0] || '';
-		const step = 1.5;
-		if(yk === 'w') {
-			this.GUN_DIM.Y -= step;
-		} else if(yk === 's') {
-			this.GUN_DIM.Y += step;
+		if(this.curKeysX.length || this.curKeysY.length) {
+			let xk = this.curKeysX[0] || '', yk = this.curKeysY[0] || '';
+			const step = this.gun_speed;
+			if(yk === 'w' && this.GUN_DIM.Y > 0) {
+				this.GUN_DIM.Y -= step;
+			} else if(yk === 's' && this.GUN_DIM.Y + this.GUN_DIM.HEAD_H < this.height) {
+				this.GUN_DIM.Y += step;
+			} 
+
+			if(xk === 'd' && this.GUN_DIM.X + this.GUN_DIM.HEAD_W < this.width) {
+				this.GUN_DIM.X += step;
+			} else if(xk === 'a' && this.GUN_DIM.X > 0) {
+				this.GUN_DIM.X -= step;
+			}
 		}
-		if(xk === 'd') {
-			this.GUN_DIM.X += step;
-		} else if(xk === 'a') {
-			this.GUN_DIM.X -= step;
-		} 
-		this.movetimer = setTimeout( () => {
-			this.moveGun();
-		}, 0);
-		
 	}
 
 	isCurKey(key = '') {
@@ -558,18 +578,14 @@ class GameCore {
 	}
 
 	onKeyDown(e) {
-		console.log(this.curKeysX, this.curKeysY)
 		let key = e.key;
-		console.log()
 		if( this.isCurKey(key) && !this.curKeysY.includes(key) && !this.curKeysX.includes(key) ) {
 			if(this.isCurKeyX(key)) {
 				this.curKeysX.unshift(key);
 			} else {
 				this.curKeysY.unshift(key);
 			}
-			clearTimeout(this.movetimer);
 			this.curKey = e.key;
-			this.moveGun();
 		}
 	}
 
